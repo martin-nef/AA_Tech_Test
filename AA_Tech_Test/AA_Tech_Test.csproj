@@ -133,9 +133,6 @@
     <Compile Include="Types\Spreadsheet.cs" />
     <Compile Include="Utilities\WebFormTools.cs" />
     <Compile Include="Types\FormData.cs" />
-    <Compile Include="FileInput.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Forms\Start.cs">
       <SubType>Form</SubType>
     </Compile>

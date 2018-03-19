@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AA_Tech_Test.Exceptions
 {
-    class NoWriteAccessException : Exception
+    public class NoWriteAccessException : Exception
     {
         public NoWriteAccessException() : base("Couldn't open file with write permissions.") { }
     }

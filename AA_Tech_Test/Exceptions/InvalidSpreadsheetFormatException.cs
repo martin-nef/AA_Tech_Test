@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AA_Tech_Test.Exceptions
 {
-    class InvalidSpreadsheetFormatException : Exception
+    public class InvalidSpreadsheetFormatException : Exception
     {
         public InvalidSpreadsheetFormatException() 
             : base("The spreadsheet didn't contain enough data. " +

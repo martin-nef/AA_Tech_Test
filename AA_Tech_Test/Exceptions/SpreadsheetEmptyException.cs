@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AA_Tech_Test.Exceptions
 {
-    class SpreadsheetEmptyException : Exception
+    public class SpreadsheetEmptyException : Exception
     {
         public SpreadsheetEmptyException() : base("Spreadsheet provided was empty.") { }
     }

@@ -42,6 +42,9 @@ namespace AA_Tech_Test.Utilities
         /// </summary>
         /// <param name="formData">An object that holds the data necessary to submit the form.</param>
         /// <returns>A deferred task that will produce a string reference number, tied to a unique submission.</returns>
+        /// <seealso cref="MyXmlException"/>
+        /// <seealso cref="WebException"/>
+        /// <seealso cref="InvalidReferenceException"/>
         public static async Task<string> PostFormDataAsync(FormData formData)
         {
             string reference = string.Empty;

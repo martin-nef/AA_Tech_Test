@@ -48,13 +48,15 @@ namespace AA_Tech_Test.Utilities
             // Open the Excel document in read-only mode
             using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, false))
             {
-                // Open and read the first spreadsheet in the document
+                // Locals
                 WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
                 WorksheetPart worksheetPart = workbookPart.WorksheetParts.First();
                 SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
                 IEnumerable<Row> rows = sheetData.Elements<Row>();
                 int rowCount = rows.Count();
                 int colCount = rows.First().Elements<Cell>().Count();
+                int col;
+                int row;
                 spreadsheet = new Spreadsheet(rowCount, colCount);
 
                 if (rowCount < 4)
@@ -63,11 +65,16 @@ namespace AA_Tech_Test.Utilities
                     throw new InvalidSpreadsheetFormatException();
                 }
 
-                // Get the values from the first cell of the first four rows
-                spreadsheet.Data[0, 0] = GetCellValue(path, "Sheet1", "A1");
-                spreadsheet.Data[1, 0] = GetCellValue(path, "Sheet1", "A2");
-                spreadsheet.Data[2, 0] = GetCellValue(path, "Sheet1", "A3");
-                spreadsheet.Data[3, 0] = GetCellValue(path, "Sheet1", "A4");
+                for (row = 0; row < rowCount; row++)
+                {
+                    for (col = 0; col < colCount; col++)
+                    {
+                        var tempRow = sheetData.Elements<Row>().ElementAt<Row>(row);
+                        var tempCell = tempRow.Elements<Cell>().ElementAt<Cell>(col);
+                        string cellRef = tempCell.CellReference;
+                        spreadsheet.Data[row, col] = GetCellValue(path, "Sheet1", cellRef);
+                    }
+                }
             }
 
             return spreadsheet;
@@ -98,14 +105,13 @@ namespace AA_Tech_Test.Utilities
         public static int AppendToExcelFile(string value, string path)
         {
             // Open Excel document in R/W mode
-            using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, true, new OpenSettings { AutoSave = true, MaxCharactersInPart = 0 }))
+            using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, true))
             {
                 if (spreadsheetDocument.FileOpenAccess != FileAccess.ReadWrite ||
                     spreadsheetDocument.FileOpenAccess != FileAccess.Write)
                 {
                     DebugTools.Log($"Couldn't get write permissions.");
                     return 2;
-                    throw new NoWriteAccessException();
                 }
 
                 // Open and read the first spreadsheet in the document
@@ -116,6 +122,7 @@ namespace AA_Tech_Test.Utilities
                 // Get the last row
                 Row lastRow = rows.Last();
 
+                // Remove some empty rows at the bottom of the file, before appending anything.
                 while (rows.Count() > 0)
                 {
                     if (lastRow.Elements<Cell>().Any(c => c != null || c.CellValue != null))
@@ -133,13 +140,11 @@ namespace AA_Tech_Test.Utilities
                 // Append a new row with the desired value in its first cell to the bottom of the spreadsheet
                 // Append the value to the first cell of the new row at the bottom of the spreadsheet.
                 Row newRow = new Row() { RowIndex = lastRow.RowIndex + 1 };
-                sheetData.Append(newRow);
                 if (newRow.Elements<Cell>().Any())
                     newRow.RemoveChild(newRow.Elements<Cell>().First());
                 newRow.PrependChild(new Cell() { CellValue = new CellValue(value) });
+                sheetData.Append(newRow);
                 spreadsheetDocument.Save();
-                worksheetPart.Worksheet.Save();
-                workbookPart.Workbook.Save();
             }
 
             return 0;

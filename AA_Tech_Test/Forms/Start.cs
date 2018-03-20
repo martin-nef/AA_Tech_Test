@@ -1,4 +1,5 @@
-﻿using AA_Tech_Test.Types;
+﻿using AA_Tech_Test.Exceptions;
+using AA_Tech_Test.Types;
 using AA_Tech_Test.Utilities;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace AA_Tech_Test
 {
     public partial class Start : Form
     {
+        private bool autoScroll = true;
+
         public Start()
         {
             InitializeComponent();
@@ -28,6 +31,7 @@ namespace AA_Tech_Test
         private void Start_Load(object sender, EventArgs e)
         {
 #if DEBUG
+            errorLabel.Text = "1\r\n2\r\n3\r\n4\r\n5\r\n";
             DebugTools.Form.Show();
             Focus();
 #endif
@@ -40,13 +44,15 @@ namespace AA_Tech_Test
 
         private async void button1_Click_2(object sender, EventArgs e)
         {
+            Spreadsheet spreadsheet;
+            FormData formData;
 
             // Get textbox value with the .xlsx file path
             string filePath = filePathTextBox.Text;
 
             if (!File.Exists(filePath))
             {
-                errorLabel.Text = "Could not find the file specified.";
+                errorLabel.Text = errorLabel.Text + "Could not find the file specified.\r\n";
                 return;
             }
 
@@ -54,44 +60,78 @@ namespace AA_Tech_Test
             // or disable typing and let the file open dialog to handle it.
 
             // Read xlsx file into a FormData object
-            Spreadsheet spreadsheet = ExcelTools.ReadExcelFile(filePath);
-            FormData formData = ExcelTools.SpreadsheetToFormData(spreadsheet);
+            try
+            {
+                spreadsheet = ExcelTools.ReadExcelFile(filePath);
+            }
+            catch (FileFormatException error)
+            {
+                errorLabel.Text += "The selected file is either corrupt, or not a valid Microsoft Excel document.\r\n";
+                return;
+            }
+            formData = ExcelTools.SpreadsheetToFormData(spreadsheet);
 
             // Send data, save the reference
             var reference = WebFormTools.PostFormDataAsync(formData);
-            //reference = WebFormTools.PostFormData(formData);
 
-            int code = ExcelTools.AppendToExcelFile(await reference, filePath);
+            int code = 0;
+            try
+            {
+                code = ExcelTools.AppendToExcelFile(await reference, filePath);
+                outputBox.Text += ((await reference).Length > 0 && (await reference).Length < 40) ? $"reference: {(await reference)}" : string.Empty;
+            }
+            catch (Exception error)
+            {
+                errorLabel.Text += $"An error has occured while saving the submission reference. Additional Info:\r\n{error.Message}\r\n";
+            }
+
             while (!reference.IsCompleted)
             {
                 if (reference.IsCanceled)
                 {
-                    errorLabel.Text = "Form post cancelled.";
+                    errorLabel.Text += "Form submission cancelled.\r\n";
                     return;
                 }
                 if (reference.IsFaulted)
                 {
-                    errorLabel.Text = "Form post failed due to an unknown error.";
+                    errorLabel.Text += "Form submission failed due to an unknown error.\r\n";
                     return;
                 }
+                switch (reference.Status)
+                {
+                    case TaskStatus.Canceled:
+                        errorLabel.Text += "Form submission cancelled.\r\n" + errorLabel.Text;
+                        return;
+                    case TaskStatus.Faulted:
+                        errorLabel.Text += "Form submission failed due to an unknown error.\r\n";
+                        return;
+                    case TaskStatus.Created:
+                    case TaskStatus.RanToCompletion:
+                    case TaskStatus.Running:
+                    case TaskStatus.WaitingForActivation:
+                    case TaskStatus.WaitingForChildrenToComplete:
+                    case TaskStatus.WaitingToRun:
+                        break;
+                    default:
+                        throw new UnknownException("Form submission failed");
+                }
                 progressBar1.PerformStep();
-                progressBar1.Value = progressBar1.Value % progressBar1.Maximum;
+                progressBar1.Step = (int)(3.00 * progressBar1.Step / 4.00);
                 System.Threading.Thread.Sleep(100);
             }
-            string result = reference.GetAwaiter().GetResult();
-            outputBox.Text = (result.Length > 0 && result.Length < 30) ? $"reference: {result}" : string.Empty;
+
             switch (code)
             {
                 case 0:
                     break;
                 case 1:
-                    errorLabel.Text = "File specified was empty.";
-                    break;
+                    errorLabel.Text += "File specified was empty.\r\n";
+                    return;
                 case 2:
-                    errorLabel.Text = "Failed to get write permissions to the file.";
-                    break;
+                    errorLabel.Text += "Failed to get write permissions to the file.\r\n";
+                    return;
             }
-
+            
             new ResultDisplay(filePath, this).Show();
         }
 
@@ -141,6 +181,35 @@ namespace AA_Tech_Test
         private void errorLabel_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void errorLabel_TextChanged(object sender, EventArgs e)
+        {
+            if (sender.GetType() != typeof(TextBox))
+            {
+                throw new TypeMismatchException(expected: typeof(TextBox), got: sender.GetType());
+            }
+
+            TextBox errorTextBox = ((TextBox)sender);
+            if (errorTextBox.Text == string.Empty)
+            {
+                errorTextBox.Parent.Visible = false;
+            }
+            else
+            {
+                errorTextBox.Parent.Visible = true;
+            }
+            
+            if (autoScroll)
+            {
+                errorTextBox.SelectionStart = errorTextBox.Text.Length;
+                errorTextBox.ScrollToCaret();
+            }
+        }
+
+        public void ToggleAutoScroll(object sender, EventArgs e)
+        {
+            autoScroll = !autoScroll;
         }
     }
 }

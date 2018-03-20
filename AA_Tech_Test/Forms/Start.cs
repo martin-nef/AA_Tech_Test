@@ -31,7 +31,6 @@ namespace AA_Tech_Test
         private void Start_Load(object sender, EventArgs e)
         {
 #if DEBUG
-            errorLabel.Text = "1\r\n2\r\n3\r\n4\r\n5\r\n";
             DebugTools.Form.Show();
             Focus();
 #endif

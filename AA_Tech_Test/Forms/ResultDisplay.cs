@@ -57,6 +57,7 @@ namespace AA_Tech_Test
             {
                 Root.Show();
             }
+            Dispose();
         }
     }
 }

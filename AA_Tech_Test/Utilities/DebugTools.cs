@@ -11,7 +11,7 @@ namespace AA_Tech_Test.Utilities
     {
         public static DebugBox Form;
         public static RichTextBox Output;
-        public static Label ErrorMessage;
+        public static TextBox ErrorMessageBox;
         public DebugTools(Form root)
         {
             if (Form == null)
@@ -22,10 +22,10 @@ namespace AA_Tech_Test.Utilities
             {
                 Output = Form.debugOutput;
             }
-            if (ErrorMessage == null && root != null &&
+            if (ErrorMessageBox == null && root != null &&
                 root.GetType() == typeof(Start))
             {
-                ErrorMessage = ((Start)root).errorLabel;
+                ErrorMessageBox = ((Start)root).errorLabel;
             }
         }
 

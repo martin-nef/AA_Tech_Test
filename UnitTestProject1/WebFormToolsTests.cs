@@ -28,10 +28,11 @@ namespace Tests
             FormData formData = new FormData("Contact Name", "Contact Email", "Contact Subject", "Message");
             string reference = WebFormTools.PostFormData(formData);
             Console.WriteLine($"PostFormDataTest, reference={reference}.");
-            if (reference.Length == 0 || reference.Length > 30)
-            {
-                throw new InvalidReferenceException();
-            }
+
+            if (WebFormTools.ReferenceValid(reference))
+                return;
+
+            throw new InvalidReferenceException(reference);
         }
     }
 }

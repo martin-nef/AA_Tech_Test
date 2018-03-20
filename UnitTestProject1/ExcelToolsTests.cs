@@ -24,26 +24,27 @@ namespace Tests
     public class ExcelToolsTests
     {
         
-        string testFile1 = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "test.xlsx"));
-        string testFile2 = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "test2.xlsx"));
+        string testFile1 = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"../../test.xlsx"));
+        string testFile2 = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"../../test2.xlsx"));
 
         [TestMethod]
         public void ReadTest()
         {
                         Spreadsheet spreadsheet = ExcelTools.ReadExcelFile(testFile2);
             if (spreadsheet.Data[0, 0] == "A1" &&
-                spreadsheet.Data[1, 0] == "A2" &&
-                spreadsheet.Data[1, 0] == "A3" &&
-                spreadsheet.Data[2, 0] == "A4" &&
                 spreadsheet.Data[0, 1] == "B1" &&
+                spreadsheet.Data[1, 0] == "A2" &&
                 spreadsheet.Data[1, 1] == "B2" &&
-                spreadsheet.Data[1, 1] == "B3" &&
-                spreadsheet.Data[1, 1] == "B4")
+                spreadsheet.Data[2, 0] == "A3" &&
+                spreadsheet.Data[2, 1] == "B3" &&
+                spreadsheet.Data[3, 0] == "A4" &&
+                spreadsheet.Data[3, 1] == "B4")
                 return;
 
             throw new Exception("Data read doesn't match data on the test spreadsheet.");
         }
 
+        [TestMethod]
         public void AppendTest()
         {
             File.Copy(testFile1, testFile2, true);
@@ -59,6 +60,10 @@ namespace Tests
                     throw new NoWriteAccessException();
             }
             if (spreadsheet == ExcelTools.ReadExcelFile(testFile2))
+            {
+                throw new NoWriteAccessException();
+            }
+            if (!ExcelTools.ReadExcelFile(testFile2).Data.ToString().Contains("__TEST__"))
             {
                 throw new NoWriteAccessException();
             }

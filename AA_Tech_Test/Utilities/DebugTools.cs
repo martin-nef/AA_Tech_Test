@@ -25,7 +25,7 @@ namespace AA_Tech_Test.Utilities
             if (ErrorMessageBox == null && root != null &&
                 root.GetType() == typeof(Start))
             {
-                ErrorMessageBox = ((Start)root).errorLabel;
+                ErrorMessageBox = ((Start)root).userMessageBox;
             }
         }
 

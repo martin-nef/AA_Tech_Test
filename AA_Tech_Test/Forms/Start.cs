@@ -30,10 +30,7 @@ namespace AA_Tech_Test
 
         private void Start_Load(object sender, EventArgs e)
         {
-#if DEBUG
-            DebugTools.Form.Show();
-            Focus();
-#endif
+
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -42,67 +39,114 @@ namespace AA_Tech_Test
         }
 
         private async void button1_Click_2(object sender, EventArgs e)
+        // TODO: make a public event handler for messages meant for the user,
+        //       and replace any references to the user message box (errorLabel)
+        //       by firing off an event instead.
         {
             Spreadsheet spreadsheet;
             FormData formData;
 
+            // Make sure this can only be ran once (for neatness I guess)
+            Button goButton = ((Button)sender);
+            goButton.Enabled = false;
+
+            // Make sure the progress bar is at 0 to start with.
+            progressBar1.Value = 0;
+
             // Get textbox value with the .xlsx file path
             string filePath = filePathTextBox.Text;
 
+            // Check that the file exists.
             if (!File.Exists(filePath))
             {
-                errorLabel.Text = errorLabel.Text + "Could not find the file specified.\r\n";
+                userMessageBox.Text = userMessageBox.Text + "Could not find the file specified.\r\n";
+                goButton.Enabled = true;
                 return;
             }
-
-            // Validate file path, and that it's a valid excel file,
-            // or disable typing and let the file open dialog to handle it.
-
-            // Read xlsx file into a FormData object
+            
+            /// Read xlsx file into a FormData object
             try
             {
                 spreadsheet = ExcelTools.ReadExcelFile(filePath);
             }
             catch (FileFormatException error)
             {
-                errorLabel.Text += "The selected file is either corrupt, or not a valid Microsoft Excel document.\r\n";
+                string tempMessage = "The selected file is either corrupt, or not a valid Microsoft Excel document.\r\n";
+                userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                goButton.Enabled = true;
                 return;
             }
             formData = ExcelTools.SpreadsheetToFormData(spreadsheet);
 
-            // Send data, save the reference
+            /// Submit the form with data read, saving the reference
             var reference = WebFormTools.PostFormDataAsync(formData);
 
-            int code = 0;
-            try
+            int errorCode = 0;
+
+            string mockReference = "MockReference - 12345678";
+            foreach (int attempt in new[] { 1, 2 })
             {
-                code = ExcelTools.AppendToExcelFile(await reference, filePath);
-                outputBox.Text += ((await reference).Length > 0 && (await reference).Length < 40) ? $"reference: {(await reference)}" : string.Empty;
-            }
-            catch (Exception error)
-            {
-                errorLabel.Text += $"An error has occured while saving the submission reference. Additional Info:\r\n{error.Message}\r\n";
+                try
+                {
+                    if (attempt == 1)
+                    {
+                        errorCode = ExcelTools.AppendToExcelFile(await reference, filePath);
+                        break; // no need to try again for attempt no. 2
+                    }
+                    else
+                    {
+                        errorCode = ExcelTools.AppendToExcelFile(mockReference, filePath);
+                        break;
+                    }
+                }
+                catch (InvalidReferenceException error)
+                {
+                    string tempMessage = $"{error.Message}\r\nFor demo purposes a mock reference was used: {mockReference}\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                }
+                catch (Exception error)
+                {
+                    string tempMessage = $"An error has occured while saving the submission reference. Additional Info:\r\n{error.Message}\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                }
             }
 
+            /// Wait for the form submission to finish, updating the loading bar in the meantime,
+            /// but let the user know if something happens during submission / reference retreival.
             while (!reference.IsCompleted)
             {
                 if (reference.IsCanceled)
                 {
-                    errorLabel.Text += "Form submission cancelled.\r\n";
+                    string tempMessage = "Form submission cancelled.\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                    goButton.Enabled = true;
                     return;
                 }
                 if (reference.IsFaulted)
                 {
-                    errorLabel.Text += "Form submission failed due to an unknown error.\r\n";
+                    string tempMessage = "Form submission failed due to an unknown error.\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                    goButton.Enabled = true;
                     return;
                 }
                 switch (reference.Status)
                 {
                     case TaskStatus.Canceled:
-                        errorLabel.Text += "Form submission cancelled.\r\n" + errorLabel.Text;
+                        string tempMessage = "Form submission cancelled.\r\n" + userMessageBox.Text;
+                        userMessageBox.Text += tempMessage;
+                        DebugTools.Log(tempMessage);
+                        goButton.Enabled = true;
                         return;
                     case TaskStatus.Faulted:
-                        errorLabel.Text += "Form submission failed due to an unknown error.\r\n";
+                        tempMessage = "Form submission failed due to an unknown error.\r\n";
+                        userMessageBox.Text += tempMessage;
+                        DebugTools.Log(tempMessage);
+                        goButton.Enabled = true;
                         return;
                     case TaskStatus.Created:
                     case TaskStatus.RanToCompletion:
@@ -114,23 +158,39 @@ namespace AA_Tech_Test
                     default:
                         throw new UnknownException("Form submission failed");
                 }
+
+                // Update the progress bar, reducing the step size every time so it never reaches 100.
                 progressBar1.PerformStep();
-                progressBar1.Step = (int)(3.00 * progressBar1.Step / 4.00);
-                System.Threading.Thread.Sleep(100);
+                progressBar1.Step =(int)(0.5 + 3.00 * progressBar1.Step / 4.00);
+
+                // Make sure that the form doesn't hang while waiting.
+                Refresh();
+                Application.DoEvents();
             }
 
-            switch (code)
+            // Change the progress bar to 100% and change the go button to show that we are done
+            progressBar1.Value = 100;
+            goButton.Enabled = true;
+
+            switch (errorCode)
             {
                 case 0:
                     break;
                 case 1:
-                    errorLabel.Text += "File specified was empty.\r\n";
+                    string tempMessage = "File specified was empty.\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                    goButton.Enabled = true;
                     return;
                 case 2:
-                    errorLabel.Text += "Failed to get write permissions to the file.\r\n";
+                    tempMessage = "Failed to get write permissions to the file.\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                    goButton.Enabled = true;
                     return;
             }
-            
+
+            goButton.Enabled = true;
             new ResultDisplay(filePath, this).Show();
         }
 
@@ -141,7 +201,6 @@ namespace AA_Tech_Test
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
-            // Quit the application
             Environment.Exit(0);
         }
 
@@ -158,23 +217,6 @@ namespace AA_Tech_Test
         private void browseButton_Click(object sender, EventArgs e)
         {
             openFileDialog1.ShowDialog();
-        }
-
-        private void outputBox_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void hiddenButton_DoubleClick(object sender, EventArgs e)
-        {
-            if (DebugTools.Form.Visible == false)
-            {
-                DebugTools.Form.Show();
-            }
-            else
-            {
-                DebugTools.Form.Hide();
-            }
         }
 
         private void errorLabel_Click(object sender, EventArgs e)

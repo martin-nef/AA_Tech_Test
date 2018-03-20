@@ -49,12 +49,10 @@ namespace AA_Tech_Test
             this.cancelButton = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.browseButton = new System.Windows.Forms.Button();
-            this.hiddenButton = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.outputBox = new System.Windows.Forms.TextBox();
             this.errorDisplayPanel = new System.Windows.Forms.Panel();
+            this.userMessageBox = new System.Windows.Forms.TextBox();
             this.autoScrollCheckBox = new System.Windows.Forms.CheckBox();
-            this.errorLabel = new System.Windows.Forms.TextBox();
             this.fileInputLabel = new System.Windows.Forms.Label();
             this.errorDisplayPanel.SuspendLayout();
             this.SuspendLayout();
@@ -78,7 +76,7 @@ namespace AA_Tech_Test
             this.fileSubmitButton.TabIndex = 2;
             this.fileSubmitButton.Text = "Submit";
             this.fileSubmitButton.UseVisualStyleBackColor = true;
-            this.fileSubmitButton.Click += new System.EventHandler(this.button1_Click_2);
+            this.fileSubmitButton.EnabledChanged += new System.EventHandler(this.fileSubmitButton_EnabledChanged);
             // 
             // instructionsLabel
             // 
@@ -124,15 +122,6 @@ namespace AA_Tech_Test
             this.browseButton.UseVisualStyleBackColor = true;
             this.browseButton.Click += new System.EventHandler(this.browseButton_Click);
             // 
-            // hiddenButton
-            // 
-            this.hiddenButton.CausesValidation = false;
-            this.hiddenButton.Location = new System.Drawing.Point(336, 33);
-            this.hiddenButton.Name = "hiddenButton";
-            this.hiddenButton.Size = new System.Drawing.Size(10, 10);
-            this.hiddenButton.TabIndex = 10;
-            this.hiddenButton.DoubleClick += new System.EventHandler(this.hiddenButton_DoubleClick);
-            // 
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -142,20 +131,6 @@ namespace AA_Tech_Test
             this.progressBar1.Step = 25;
             this.progressBar1.TabIndex = 11;
             // 
-            // outputBox
-            // 
-            this.outputBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.outputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.outputBox.CausesValidation = false;
-            this.outputBox.Location = new System.Drawing.Point(15, 46);
-            this.outputBox.MinimumSize = new System.Drawing.Size(70, 18);
-            this.outputBox.Multiline = true;
-            this.outputBox.Name = "outputBox";
-            this.outputBox.ReadOnly = true;
-            this.outputBox.Size = new System.Drawing.Size(357, 18);
-            this.outputBox.TabIndex = 9;
-            // 
             // errorDisplayPanel
             // 
             this.errorDisplayPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -164,14 +139,31 @@ namespace AA_Tech_Test
             this.errorDisplayPanel.AutoScroll = true;
             this.errorDisplayPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.errorDisplayPanel.CausesValidation = false;
-            this.errorDisplayPanel.Controls.Add(this.autoScrollCheckBox);
-            this.errorDisplayPanel.Controls.Add(this.errorLabel);
+            this.errorDisplayPanel.Controls.Add(this.userMessageBox);
             this.errorDisplayPanel.Location = new System.Drawing.Point(12, 67);
             this.errorDisplayPanel.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
             this.errorDisplayPanel.MinimumSize = new System.Drawing.Size(80, 16);
             this.errorDisplayPanel.Name = "errorDisplayPanel";
             this.errorDisplayPanel.Size = new System.Drawing.Size(360, 69);
             this.errorDisplayPanel.TabIndex = 12;
+            // 
+            // userMessageBox
+            // 
+            this.userMessageBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.userMessageBox.CausesValidation = false;
+            this.userMessageBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.userMessageBox.ForeColor = System.Drawing.Color.Black;
+            this.userMessageBox.Location = new System.Drawing.Point(0, 0);
+            this.userMessageBox.MinimumSize = new System.Drawing.Size(70, 18);
+            this.userMessageBox.Multiline = true;
+            this.userMessageBox.Name = "userMessageBox";
+            this.userMessageBox.ReadOnly = true;
+            this.userMessageBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.userMessageBox.ShortcutsEnabled = false;
+            this.userMessageBox.Size = new System.Drawing.Size(360, 69);
+            this.userMessageBox.TabIndex = 13;
+            this.userMessageBox.WordWrap = false;
+            this.userMessageBox.TextChanged += new System.EventHandler(this.errorLabel_TextChanged);
             // 
             // autoScrollCheckBox
             // 
@@ -180,7 +172,7 @@ namespace AA_Tech_Test
             this.autoScrollCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.autoScrollCheckBox.Checked = true;
             this.autoScrollCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoScrollCheckBox.Location = new System.Drawing.Point(258, 3);
+            this.autoScrollCheckBox.Location = new System.Drawing.Point(289, 139);
             this.autoScrollCheckBox.Name = "autoScrollCheckBox";
             this.autoScrollCheckBox.Size = new System.Drawing.Size(81, 19);
             this.autoScrollCheckBox.TabIndex = 14;
@@ -188,27 +180,11 @@ namespace AA_Tech_Test
             this.autoScrollCheckBox.UseVisualStyleBackColor = true;
             this.autoScrollCheckBox.CheckedChanged += new System.EventHandler(this.ToggleAutoScroll);
             // 
-            // errorLabel
-            // 
-            this.errorLabel.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.errorLabel.CausesValidation = false;
-            this.errorLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.errorLabel.ForeColor = System.Drawing.Color.Black;
-            this.errorLabel.Location = new System.Drawing.Point(0, 0);
-            this.errorLabel.MinimumSize = new System.Drawing.Size(70, 18);
-            this.errorLabel.Multiline = true;
-            this.errorLabel.Name = "errorLabel";
-            this.errorLabel.ReadOnly = true;
-            this.errorLabel.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.errorLabel.ShortcutsEnabled = false;
-            this.errorLabel.Size = new System.Drawing.Size(360, 69);
-            this.errorLabel.TabIndex = 13;
-            this.errorLabel.TextChanged += new System.EventHandler(this.errorLabel_TextChanged);
-            // 
             // fileInputLabel
             // 
             this.fileInputLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.fileInputLabel.Location = new System.Drawing.Point(12, 149);
+            this.fileInputLabel.Location = new System.Drawing.Point(12, 144);
+            this.fileInputLabel.Margin = new System.Windows.Forms.Padding(3);
             this.fileInputLabel.Name = "fileInputLabel";
             this.fileInputLabel.Size = new System.Drawing.Size(165, 15);
             this.fileInputLabel.TabIndex = 15;
@@ -219,11 +195,10 @@ namespace AA_Tech_Test
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 14F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(384, 237);
+            this.Controls.Add(this.autoScrollCheckBox);
             this.Controls.Add(this.fileInputLabel);
             this.Controls.Add(this.errorDisplayPanel);
             this.Controls.Add(this.progressBar1);
-            this.Controls.Add(this.outputBox);
-            this.Controls.Add(this.hiddenButton);
             this.Controls.Add(this.browseButton);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.instructionsLabel);
@@ -249,12 +224,10 @@ namespace AA_Tech_Test
         public Button cancelButton;
         private OpenFileDialog openFileDialog1;
         private Button browseButton;
-        private Label hiddenButton;
         private ProgressBar progressBar1;
-        public TextBox outputBox;
         private Panel errorDisplayPanel;
         private Label fileInputLabel;
-        public TextBox errorLabel;
+        public TextBox userMessageBox;
         private CheckBox autoScrollCheckBox;
     }
 }

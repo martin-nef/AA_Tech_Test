@@ -76,7 +76,7 @@ namespace AA_Tech_Test
             this.fileSubmitButton.TabIndex = 2;
             this.fileSubmitButton.Text = "Submit";
             this.fileSubmitButton.UseVisualStyleBackColor = true;
-            this.fileSubmitButton.EnabledChanged += new System.EventHandler(this.fileSubmitButton_EnabledChanged);
+            this.fileSubmitButton.Click += new System.EventHandler(this.fileSubmitButton_Click);
             // 
             // instructionsLabel
             // 

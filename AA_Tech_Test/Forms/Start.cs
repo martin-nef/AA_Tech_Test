@@ -38,7 +38,7 @@ namespace AA_Tech_Test
 
         }
 
-        private async void button1_Click_2(object sender, EventArgs e)
+        private async void fileSubmitButton_Click(object sender, EventArgs e)
         // TODO: make a public event handler for messages meant for the user,
         //       and replace any references to the user message box (errorLabel)
         //       by firing off an event instead.
@@ -69,7 +69,7 @@ namespace AA_Tech_Test
             {
                 spreadsheet = ExcelTools.ReadExcelFile(filePath);
             }
-            catch (FileFormatException error)
+            catch (FileFormatException)
             {
                 string tempMessage = "The selected file is either corrupt, or not a valid Microsoft Excel document.\r\n";
                 userMessageBox.Text += tempMessage;

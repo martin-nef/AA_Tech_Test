@@ -9,9 +9,10 @@ namespace AA_Tech_Test.Utilities
 {
     public class DebugTools
     {
+
         public static DebugBox Form;
         public static RichTextBox Output;
-        public static TextBox ErrorMessageBox;
+        public static TextBox UserMessageBox;
         public DebugTools(Form root)
         {
             if (Form == null)
@@ -22,10 +23,10 @@ namespace AA_Tech_Test.Utilities
             {
                 Output = Form.debugOutput;
             }
-            if (ErrorMessageBox == null && root != null &&
+            if (UserMessageBox == null && root != null &&
                 root.GetType() == typeof(Start))
             {
-                ErrorMessageBox = ((Start)root).userMessageBox;
+                UserMessageBox = ((Start)root).userMessageBox;
             }
         }
 

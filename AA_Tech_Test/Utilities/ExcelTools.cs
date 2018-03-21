@@ -14,6 +14,7 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -23,6 +24,13 @@ namespace AA_Tech_Test.Utilities
 {
     public class ExcelTools
     {
+        // TODO: instead of entirely locking out writing while reading,
+        //       have a dictionary with file pathes as keys and lock objects as values,
+        //       so that there's a different lock for each file; 
+        //       and make that dictionary only accessible synchronously.
+        //       Check for deadlocks.
+        private static object writeLock = new object();
+
         /// <summary>
         /// Reads a special Excel spreadsheet document and produces a FormData object, 
         /// used to fill a form at https://agileautomations.co.uk/home/inputform.
@@ -45,34 +53,39 @@ namespace AA_Tech_Test.Utilities
             // Initialise the return variable
             Spreadsheet spreadsheet;
 
-            // Open the Excel document in read-only mode
-            using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, false))
+            // Make sure we can't write anything to a file while reading from one, 
+            // since these methods are usually called on the same file.
+            lock (writeLock)
             {
-                // Locals
-                WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
-                WorksheetPart worksheetPart = workbookPart.WorksheetParts.First();
-                SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-                IEnumerable<Row> rows = sheetData.Elements<Row>();
-                int rowCount = rows.Count();
-                int colCount = rows.First().Elements<Cell>().Count();
-                int col;
-                int row;
-                spreadsheet = new Spreadsheet(rowCount, colCount);
-
-                if (rowCount < 4)
+                // Open the Excel document in read-only mode
+                using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, false))
                 {
-                    // Since we assume there are at least 4 rows, continuing would cause an error.
-                    throw new InvalidSpreadsheetFormatException();
-                }
+                    // Locals
+                    WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
+                    WorksheetPart worksheetPart = workbookPart.WorksheetParts.First();
+                    SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+                    IEnumerable<Row> rows = sheetData.Elements<Row>();
+                    int rowCount = rows.Count();
+                    int colCount = rows.First().Elements<Cell>().Count();
+                    int col;
+                    int row;
+                    spreadsheet = new Spreadsheet(rowCount, colCount);
 
-                for (row = 0; row < rowCount; row++)
-                {
-                    for (col = 0; col < colCount; col++)
+                    if (rowCount < 4)
                     {
-                        var tempRow = sheetData.Elements<Row>().ElementAt<Row>(row);
-                        var tempCell = tempRow.Elements<Cell>().ElementAt<Cell>(col);
-                        string cellRef = tempCell.CellReference;
-                        spreadsheet.Data[row, col] = GetCellValue(path, "Sheet1", cellRef);
+                        // Since we assume there are at least 4 rows, continuing would cause an error.
+                        throw new InvalidSpreadsheetFormatException();
+                    }
+
+                    for (row = 0; row < rowCount; row++)
+                    {
+                        for (col = 0; col < colCount; col++)
+                        {
+                            var tempRow = sheetData.Elements<Row>().ElementAt<Row>(row);
+                            var tempCell = tempRow.Elements<Cell>().ElementAt<Cell>(col);
+                            string cellRef = tempCell.CellReference;
+                            spreadsheet.Data[row, col] = GetCellValue(path, "Sheet1", cellRef);
+                        }
                     }
                 }
             }
@@ -94,6 +107,7 @@ namespace AA_Tech_Test.Utilities
 
         /// <summary>
         /// Appends row to the bottom of an MS Excel spreadsheet, with a specified value in its first cell.
+        /// This is a synchronized method.
         /// </summary>
         /// <param name="value">Velue to be written to the spreadsheet.</param>
         /// <param name="path">Excel spreadsheet document file path.</param>
@@ -104,47 +118,51 @@ namespace AA_Tech_Test.Utilities
         /// </returns>
         public static int AppendToExcelFile(string value, string path)
         {
-            // Open Excel document in R/W mode
-            using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, true))
+            // Wait for all reading to be done.
+            lock (writeLock)
             {
-                if (spreadsheetDocument.FileOpenAccess != FileAccess.ReadWrite ||
-                    spreadsheetDocument.FileOpenAccess != FileAccess.Write)
+                // Open Excel document in R/W mode
+                using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(path, true))
                 {
-                    DebugTools.Log($"Couldn't get write permissions.");
-                    return 2;
+                    if (spreadsheetDocument.FileOpenAccess != FileAccess.ReadWrite ||
+                        spreadsheetDocument.FileOpenAccess != FileAccess.Write)
+                    {
+                        DebugTools.Log($"Couldn't get write permissions.");
+                        return 2;
+                    }
+
+                    // Open and read the first spreadsheet in the document
+                    WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
+                    WorksheetPart worksheetPart = workbookPart.WorksheetParts.First();
+                    SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+                    IEnumerable<Row> rows = sheetData.Elements<Row>();
+                    // Get the last row
+                    Row lastRow = rows.Last();
+
+                    // Remove some empty rows at the bottom of the file, before appending anything.
+                    while (rows.Count() > 0)
+                    {
+                        if (lastRow.Elements<Cell>().Any(c => c != null || c.CellValue != null))
+                            break;
+
+                        lastRow.Remove();
+                        lastRow = rows.Last();
+                        DebugTools.Log("Successfully removed blank line before appending reference.");
+                    }
+
+                    // If last row is null, notify that doc is empty.
+                    if (lastRow == null)
+                        return 1;
+
+                    // Append a new row with the desired value in its first cell to the bottom of the spreadsheet
+                    // Append the value to the first cell of the new row at the bottom of the spreadsheet.
+                    Row newRow = new Row() { RowIndex = lastRow.RowIndex + 1 };
+                    if (newRow.Elements<Cell>().Any())
+                        newRow.RemoveChild(newRow.Elements<Cell>().First());
+                    newRow.PrependChild(new Cell() { CellValue = new CellValue(value) });
+                    sheetData.Append(newRow);
+                    spreadsheetDocument.Save();
                 }
-
-                // Open and read the first spreadsheet in the document
-                WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
-                WorksheetPart worksheetPart = workbookPart.WorksheetParts.First();
-                SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-                IEnumerable<Row> rows = sheetData.Elements<Row>();
-                // Get the last row
-                Row lastRow = rows.Last();
-
-                // Remove some empty rows at the bottom of the file, before appending anything.
-                while (rows.Count() > 0)
-                {
-                    if (lastRow.Elements<Cell>().Any(c => c != null || c.CellValue != null))
-                        break;
-
-                    lastRow.Remove();
-                    lastRow = rows.Last();
-                    DebugTools.Log("Successfully removed blank line before appending reference.");
-                }
-
-                // If last row is null, notify that doc is empty.
-                if (lastRow == null)
-                    return 1;
-
-                // Append a new row with the desired value in its first cell to the bottom of the spreadsheet
-                // Append the value to the first cell of the new row at the bottom of the spreadsheet.
-                Row newRow = new Row() { RowIndex = lastRow.RowIndex + 1 };
-                if (newRow.Elements<Cell>().Any())
-                    newRow.RemoveChild(newRow.Elements<Cell>().First());
-                newRow.PrependChild(new Cell() { CellValue = new CellValue(value) });
-                sheetData.Append(newRow);
-                spreadsheetDocument.Save();
             }
 
             return 0;
@@ -155,7 +173,7 @@ namespace AA_Tech_Test.Utilities
         /// and address name.
         /// Method from Microsoft <see href="https://msdn.microsoft.com/en-us/library/office/hh298534.aspx#Anchor_5">docs</see>.
         /// </summary>
-        public static string GetCellValue(string fileName,
+        private static string GetCellValue(string fileName,
             string sheetName,
             string addressName)
         {

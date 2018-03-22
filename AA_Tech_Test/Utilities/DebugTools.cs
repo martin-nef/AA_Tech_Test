@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AA_Tech_Test.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,26 +8,26 @@ using System.Windows.Forms;
 
 namespace AA_Tech_Test.Utilities
 {
-    public class DebugTools
+    public static class DebugTools
     {
+        private static object instanceLock = new object();
+        private static Form Parent;
+        public static DebugBox WinForm;
+        public static RichTextBox DebugOutputRichTextBox;
 
-        public static DebugBox Form;
-        public static RichTextBox Output;
-        public static TextBox UserMessageBox;
-        public DebugTools(Form root)
+        public static void Initialise(Start root)
         {
-            if (Form == null)
+            if (Parent == null)
             {
-                Form = new DebugBox(root);
+                Parent = root;
             }
-            if (Output == null)
+            if (WinForm == null)
             {
-                Output = Form.debugOutput;
+                WinForm = new DebugBox(root);
             }
-            if (UserMessageBox == null && root != null &&
-                root.GetType() == typeof(Start))
+            if (DebugOutputRichTextBox == null)
             {
-                UserMessageBox = ((Start)root).userMessageBox;
+                DebugOutputRichTextBox = WinForm.DebugOutputRichTextBox;
             }
         }
 
@@ -37,8 +38,15 @@ namespace AA_Tech_Test.Utilities
 
         public static void Log(IEnumerable<string> lines)
         {
-            if (Output == null) return;
-            Output.Lines = Output.Lines.Concat(lines).ToArray();
+            if (DebugOutputRichTextBox == null)
+            {
+                if (WinForm == null)
+                    throw new DebugFormUninitialisedException();
+
+                DebugOutputRichTextBox = WinForm.DebugOutputRichTextBox;
+            }
+
+            DebugOutputRichTextBox.Lines = DebugOutputRichTextBox.Lines.Concat(lines).ToArray();
         }
     }
 }

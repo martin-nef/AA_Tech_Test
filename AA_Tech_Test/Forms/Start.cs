@@ -25,14 +25,39 @@ namespace AA_Tech_Test
         public Start()
         {
             InitializeComponent();
-            new DebugTools(this);
+
+            /// Initialise utilities
+
+            // Creates a debug winform, so we can log anything that happens to it
+            // using DebugTools.Log(string).
+            DebugTools.Initialise(this);
+            ExcelTools.Initialise(this);
         }
 
         private void Start_Load(object sender, EventArgs e)
         {
 #if DEBUG
-            DebugTools.Form.Show();
+            // Show the debug log form if the program was built in debug build configuration.
+            DebugTools.WinForm.Show();
 #endif
+        }
+
+        /// <summary>
+        /// Update the progress bar, reducing the step size every time so it never reaches 100.
+        /// </summary>
+        public void UpdateProgressBar()
+        {
+            progressBar.Value = 100 - (progressBar.Value / 10);
+        }
+
+        public void ResetProgressBar()
+        {
+            progressBar.Value = 0;
+        }
+
+        public void FillProgressBar()
+        {
+            progressBar.Value = 100;
         }
 
         private void fileSubmitButton_Click(object sender, EventArgs e)
@@ -48,7 +73,7 @@ namespace AA_Tech_Test
             goButton.Enabled = false;
 
             // Make sure the progress bar is at 0 to start with.
-            progressBar1.Value = 0;
+            ResetProgressBar();
 
             // Get textbox value with the .xlsx file path
             string filePath = filePathTextBox.Text;
@@ -56,7 +81,7 @@ namespace AA_Tech_Test
             // Check that the file exists.
             if (!File.Exists(filePath))
             {
-                userMessageBox.Text = userMessageBox.Text + "Could not find the file specified.\r\n";
+                UserMessageBox.Text = UserMessageBox.Text + "Could not find the file specified.\r\n";
                 goButton.Enabled = true;
                 return;
             }
@@ -69,7 +94,7 @@ namespace AA_Tech_Test
             catch (FileFormatException)
             {
                 string tempMessage = "The selected file is either corrupt, or not a valid Microsoft Excel document.\r\n";
-                userMessageBox.Text += tempMessage;
+                UserMessageBox.Text += tempMessage;
                     DebugTools.Log(tempMessage);
                 goButton.Enabled = true;
                 return;
@@ -86,7 +111,7 @@ namespace AA_Tech_Test
                 if (reference.IsCanceled)
                 {
                     string tempMessage = "Form submission cancelled.\r\n";
-                    userMessageBox.Text += tempMessage;
+                    UserMessageBox.Text += tempMessage;
                     DebugTools.Log(tempMessage);
                     goButton.Enabled = true;
                     return;
@@ -94,15 +119,14 @@ namespace AA_Tech_Test
                 if (reference.IsFaulted)
                 {
                     string tempMessage = "Form submission failed due to an unknown error.\r\n";
-                    userMessageBox.Text += tempMessage;
+                    UserMessageBox.Text += tempMessage;
                     DebugTools.Log(tempMessage);
                     goButton.Enabled = true;
                     return;
                 }
 
-                // Update the progress bar, reducing the step size every time so it never reaches 100.
-                progressBar1.PerformStep();
-                progressBar1.Step = (int)(0.5 + 3.00 * progressBar1.Step / 4.00);
+                // Update the progress bar.
+                UpdateProgressBar();
 
                 // Make sure that the form doesn't hang while waiting.
                 Refresh();
@@ -110,7 +134,7 @@ namespace AA_Tech_Test
             }
 
             // Change the progress bar to 100% and change the go button to show that we are done
-            progressBar1.Value = 100;
+            FillProgressBar();
             goButton.Enabled = true;
 
             int errorCode = 0;
@@ -133,13 +157,13 @@ namespace AA_Tech_Test
                 catch (InvalidReferenceException error)
                 {
                     string errorMessage = $"{error.Message}\r\nFor demo purposes a mock reference was used: {mockReference}\r\n";
-                    userMessageBox.Text += errorMessage;
+                    UserMessageBox.Text += errorMessage;
                     DebugTools.Log(errorMessage);
                 }
                 catch (Exception error)
                 {
                     string tempMessage = $"An error has occured while saving the submission reference. Additional Info:\r\n{error.Message}\r\n";
-                    userMessageBox.Text += tempMessage;
+                    UserMessageBox.Text += tempMessage;
                     DebugTools.Log(tempMessage);
                 }
             }
@@ -150,20 +174,20 @@ namespace AA_Tech_Test
                     break;
                 case 1:
                     string errorMessage = "File specified was empty.\r\n";
-                    userMessageBox.Text += errorMessage;
+                    UserMessageBox.Text += errorMessage;
                     DebugTools.Log(errorMessage);
                     goButton.Enabled = true;
                     return;
                 case 2:
                     errorMessage = "Failed to get write permissions to the file.\r\n";
-                    userMessageBox.Text += errorMessage;
+                    UserMessageBox.Text += errorMessage;
                     DebugTools.Log(errorMessage);
                     goButton.Enabled = true;
-                    return;
+                    break;
             }
 
             goButton.Enabled = true;
-            new ResultDisplay(filePath, this).Show();
+            ExcelTools.DisplatResults(filePath, this);
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -173,12 +197,12 @@ namespace AA_Tech_Test
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            filePathTextBox.Text = openFileDialog1.FileName;
+            filePathTextBox.Text = openFileDialog.FileName;
         }
 
         private void browseButton_Click(object sender, EventArgs e)
         {
-            openFileDialog1.ShowDialog();
+            openFileDialog.ShowDialog();
         }
 
         private void userMessageBox_TextChanged(object sender, EventArgs e)

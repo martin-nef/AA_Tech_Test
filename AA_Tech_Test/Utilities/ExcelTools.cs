@@ -22,30 +22,44 @@ using System.Windows.Forms;
 
 namespace AA_Tech_Test.Utilities
 {
-    public class ExcelTools
+    /// <summary>
+    /// Collection of tools, built to read excel files and to be able to appenda a string to one.
+    /// Uses the first sheet in the specified document, ignores the rest.
+    /// </summary>
+    public static class ExcelTools
+    // TODO: make this work with large excel files (with several workbook parts I think)
     {
+        private static Start Parent;
+        private static ResultDisplay WinForm;
+
+        private static ResultDisplay GetWinForm(string filePath)
+        {
+            return new ResultDisplay(filePath, Parent);
+        }
+
+        public static void Initialise(Start root)
+        {
+            if (Parent == null)
+            {
+                Parent = root;
+            }
+        }
+
         // TODO: instead of entirely locking out writing while reading,
         //       have a dictionary with file pathes as keys and lock objects as values,
         //       so that there's a different lock for each file; 
         //       and make that dictionary only accessible synchronously.
-        //       Check for deadlocks.
+        //       Check for potential deadlocks!
         private static object writeLock = new object();
 
         /// <summary>
-        /// Reads a special Excel spreadsheet document and produces a FormData object, 
-        /// used to fill a form at https://agileautomations.co.uk/home/inputform.
-        /// 
-        /// The spreadsheet must have 4 rows with the first cell of each row
-        /// containing a contact's name, email, subject and a message - in that order.
-        /// 
-        /// The spreadsheet will be updated with the reference returned by the form,
-        /// which will be appended to the bottom of the spreadsheet.
-        /// 
+        /// Blocks other I/O that this module does. Namely <see cref="ReadExcelFile">
+        /// ReadExcelFile</see> and <see cref="AppendToExcelFile">AppendToExcelFile</see>
         /// This only uses the first spreadsheet in the document.
         /// </summary>
         /// <param name="path">Path to the Excel spreadsheet.</param>
         /// <returns></returns>
-        public static Spreadsheet ReadExcelFile(string path)
+        public static Spreadsheet ReadExcelFile(string path, string sheetName = null)
         {
             // Make sure that we have the fuill path, just in case
             path = Path.GetFullPath(path);
@@ -67,8 +81,8 @@ namespace AA_Tech_Test.Utilities
                     IEnumerable<Row> rows = sheetData.Elements<Row>();
                     int rowCount = rows.Count();
                     int colCount = rows.First().Elements<Cell>().Count();
-                    int col;
-                    int row;
+                    int colIndex;
+                    int rowIndex;
                     spreadsheet = new Spreadsheet(rowCount, colCount);
 
                     if (rowCount < 4)
@@ -77,22 +91,30 @@ namespace AA_Tech_Test.Utilities
                         throw new InvalidSpreadsheetFormatException();
                     }
 
-                    for (row = 0; row < rowCount; row++)
+                    for (rowIndex = 0; rowIndex < rowCount; rowIndex++)
                     {
-                        for (col = 0; col < colCount; col++)
+                        for (colIndex = 0; colIndex < colCount; colIndex++)
                         {
-                            var tempRow = sheetData.Elements<Row>().ElementAt<Row>(row);
-                            var tempCell = tempRow.Elements<Cell>().ElementAt<Cell>(col);
-                            string cellRef = tempCell.CellReference;
-                            spreadsheet.Data[row, col] = GetCellValue(path, "Sheet1", cellRef);
+                            spreadsheet.Data[rowIndex, colIndex] = GetCellValue(rowIndex, colIndex, spreadsheetDocument);
+
+                            // This can take a while, so make sure that the form doesn't hang while waiting.
+                            Parent.Update();
+                            Parent.UpdateProgressBar();
+                            Application.DoEvents();
                         }
                     }
+                    Parent.FillProgressBar();
                 }
             }
-
             return spreadsheet;
         }
 
+        /// <summary>
+        /// Get a name from A1 or (0,0); an email from A2 or (0,0); a subject from A3 or (0,0);
+        /// and get a message from A4 or (0,0);
+        /// </summary>
+        /// <param name="spreadsheet"></param>
+        /// <returns></returns>
         public static FormData SpreadsheetToFormData(Spreadsheet spreadsheet)
         {
             FormData data = new FormData
@@ -106,8 +128,123 @@ namespace AA_Tech_Test.Utilities
         }
 
         /// <summary>
+        /// Based on GetCellValue method by Microsoft 
+        /// <see href="https://msdn.microsoft.com/en-us/library/office/hh298534.aspx#Anchor_5">
+        /// docs</see>.
+        /// </summary>
+        /// <param name="address">Example "A2", "C12"</param>
+        /// <param name=""></param>
+        /// <returns></returns>
+        private static string GetCellValue(int rowIndex, int colIndex, SpreadsheetDocument document, string sheetName = null)
+        {
+            string value = null;
+
+            // Retrieve a reference to the workbook part.
+            WorkbookPart wbPart = document.WorkbookPart;
+
+            Sheet theSheet;
+            if (sheetName == null)
+            {
+                // Get the first sheet, and then use that Sheet object to retrieve a reference
+                // to the first worksheet.
+                theSheet = wbPart.Workbook.Descendants<Sheet>().FirstOrDefault();
+            }
+            else
+            {
+                // Find the sheet with the supplied name, and then use that Sheet object
+                // to retrieve a reference to the first worksheet.
+                theSheet = wbPart.Workbook.Descendants<Sheet>().Where(s => s.Name == sheetName)
+                    .FirstOrDefault();
+            }
+
+            // Throw an exception if there is no sheet.
+            if (theSheet == null)
+            {
+                throw new ArgumentException("There are no sheets in the selected Excel document.");
+            }
+
+            // Retrieve a reference to the worksheet part.
+            WorksheetPart wsPart =
+                (WorksheetPart)(wbPart.GetPartById(theSheet.Id));
+
+            // Use its Worksheet property to get a reference to the cell 
+            // whose address matches the address you supplied.
+            Cell cell;
+            try
+            {
+                cell = wsPart.Worksheet.Descendants<Row>().ElementAt(rowIndex).Descendants<Cell>().ElementAt(colIndex);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                cell = null;
+            }
+
+            // If the cell does not exist, return an empty string.
+            if (cell != null)
+            {
+                value = cell.InnerText;
+
+                // If the cell represents an integer number, you are done. 
+                // For dates, this code returns the serialized value that 
+                // represents the date. The code handles strings and 
+                // Booleans individually. For shared strings, the code 
+                // looks up the corresponding value in the shared string 
+                // table. For Booleans, the code converts the value into 
+                // the words TRUE or FALSE.
+                if (cell.DataType != null)
+                {
+                    switch (cell.DataType.Value)
+                    {
+                        case CellValues.SharedString:
+
+                            // For shared strings, look up the value in the
+                            // shared strings table.
+                            var stringTable =
+                                wbPart.GetPartsOfType<SharedStringTablePart>()
+                                .FirstOrDefault();
+
+                            // If the shared string table is missing, something 
+                            // is wrong. Return the index that is in
+                            // the cell. Otherwise, look up the correct text in 
+                            // the table.
+                            if (stringTable != null)
+                            {
+                                value =
+                                    stringTable.SharedStringTable
+                                    .ElementAt(int.Parse(value)).InnerText;
+                            }
+                            break;
+
+                        case CellValues.Boolean:
+                            switch (value)
+                            {
+                                case "0":
+                                    value = "FALSE";
+                                    break;
+                                default:
+                                    value = "TRUE";
+                                    break;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        internal static void DisplatResults(string filePath, Form root)
+        {
+            if (WinForm != null)
+            {
+                WinForm.Dispose();
+            }
+            WinForm = GetWinForm(filePath);
+            WinForm.Show();
+        }
+
+        /// <summary>
         /// Appends row to the bottom of an MS Excel spreadsheet, with a specified value in its first cell.
-        /// This is a synchronized method.
         /// </summary>
         /// <param name="value">Velue to be written to the spreadsheet.</param>
         /// <param name="path">Excel spreadsheet document file path.</param>
@@ -128,7 +265,7 @@ namespace AA_Tech_Test.Utilities
                         spreadsheetDocument.FileOpenAccess != FileAccess.Write)
                     {
                         DebugTools.Log($"Couldn't get write permissions.");
-                        return 2;
+                        //return 2;
                     }
 
                     // Open and read the first spreadsheet in the document
@@ -147,7 +284,7 @@ namespace AA_Tech_Test.Utilities
 
                         lastRow.Remove();
                         lastRow = rows.Last();
-                        DebugTools.Log("Successfully removed blank line before appending reference.");
+                        DebugTools.Log("Successfully removed a blank line from the end of file before appending the reference.");
                     }
 
                     // If last row is null, notify that doc is empty.
@@ -166,98 +303,6 @@ namespace AA_Tech_Test.Utilities
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// Retrieve the value of a cell, given a file name, sheet name, 
-        /// and address name.
-        /// Method from Microsoft <see href="https://msdn.microsoft.com/en-us/library/office/hh298534.aspx#Anchor_5">docs</see>.
-        /// </summary>
-        private static string GetCellValue(string fileName,
-            string sheetName,
-            string addressName)
-        {
-            string value = null;
-
-            // Open the spreadsheet document for read-only access.
-            using (SpreadsheetDocument document =
-                SpreadsheetDocument.Open(fileName, false))
-            {
-                // Retrieve a reference to the workbook part.
-                WorkbookPart wbPart = document.WorkbookPart;
-
-                // Find the sheet with the supplied name, and then use that 
-                // Sheet object to retrieve a reference to the first worksheet.
-                Sheet theSheet = wbPart.Workbook.Descendants<Sheet>().
-                  Where(s => s.Name == sheetName).FirstOrDefault();
-
-                // Throw an exception if there is no sheet.
-                if (theSheet == null)
-                {
-                    throw new ArgumentException("sheetName");
-                }
-
-                // Retrieve a reference to the worksheet part.
-                WorksheetPart wsPart =
-                    (WorksheetPart)(wbPart.GetPartById(theSheet.Id));
-
-                // Use its Worksheet property to get a reference to the cell 
-                // whose address matches the address you supplied.
-                Cell theCell = wsPart.Worksheet.Descendants<Cell>().
-                  Where(c => c.CellReference == addressName).FirstOrDefault();
-
-                // If the cell does not exist, return an empty string.
-                if (theCell != null)
-                {
-                    value = theCell.InnerText;
-
-                    // If the cell represents an integer number, you are done. 
-                    // For dates, this code returns the serialized value that 
-                    // represents the date. The code handles strings and 
-                    // Booleans individually. For shared strings, the code 
-                    // looks up the corresponding value in the shared string 
-                    // table. For Booleans, the code converts the value into 
-                    // the words TRUE or FALSE.
-                    if (theCell.DataType != null)
-                    {
-                        switch (theCell.DataType.Value)
-                        {
-                            case CellValues.SharedString:
-
-                                // For shared strings, look up the value in the
-                                // shared strings table.
-                                var stringTable =
-                                    wbPart.GetPartsOfType<SharedStringTablePart>()
-                                    .FirstOrDefault();
-
-                                // If the shared string table is missing, something 
-                                // is wrong. Return the index that is in
-                                // the cell. Otherwise, look up the correct text in 
-                                // the table.
-                                if (stringTable != null)
-                                {
-                                    value =
-                                        stringTable.SharedStringTable
-                                        .ElementAt(int.Parse(value)).InnerText;
-                                }
-                                break;
-
-                            case CellValues.Boolean:
-                                switch (value)
-                                {
-                                    case "0":
-                                        value = "FALSE";
-                                        break;
-                                    default:
-                                        value = "TRUE";
-                                        break;
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-            return value;
         }
     }
 }

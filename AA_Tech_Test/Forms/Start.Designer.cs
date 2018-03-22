@@ -46,15 +46,15 @@ namespace AA_Tech_Test
             this.filePathTextBox = new System.Windows.Forms.TextBox();
             this.fileSubmitButton = new System.Windows.Forms.Button();
             this.instructionsLabel = new System.Windows.Forms.Label();
-            this.cancelButton = new System.Windows.Forms.Button();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.CancelButton_ = new System.Windows.Forms.Button();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.browseButton = new System.Windows.Forms.Button();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.errorDisplayPanel = new System.Windows.Forms.Panel();
-            this.userMessageBox = new System.Windows.Forms.TextBox();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.userOutputDisplayPanel = new System.Windows.Forms.Panel();
+            this.UserMessageBox = new System.Windows.Forms.TextBox();
             this.autoScrollCheckBox = new System.Windows.Forms.CheckBox();
             this.fileInputLabel = new System.Windows.Forms.Label();
-            this.errorDisplayPanel.SuspendLayout();
+            this.userOutputDisplayPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // filePathTextBox
@@ -92,22 +92,22 @@ namespace AA_Tech_Test
             // 
             // cancelButton
             // 
-            this.cancelButton.AccessibleName = "";
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelButton.Location = new System.Drawing.Point(216, 201);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(75, 23);
-            this.cancelButton.TabIndex = 5;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            this.CancelButton_.AccessibleName = "";
+            this.CancelButton_.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.CancelButton_.Location = new System.Drawing.Point(216, 201);
+            this.CancelButton_.Name = "cancelButton";
+            this.CancelButton_.Size = new System.Drawing.Size(75, 23);
+            this.CancelButton_.TabIndex = 5;
+            this.CancelButton_.Text = "Cancel";
+            this.CancelButton_.UseVisualStyleBackColor = true;
+            this.CancelButton_.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.DefaultExt = "xlsx";
-            this.openFileDialog1.Filter = "Excel file|*.xlsx";
-            this.openFileDialog1.Title = "Please select your excel file.";
-            this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
+            this.openFileDialog.DefaultExt = "xlsx";
+            this.openFileDialog.Filter = "Excel file|*.xlsx";
+            this.openFileDialog.Title = "Please select your excel file.";
+            this.openFileDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
             // 
             // browseButton
             // 
@@ -123,46 +123,46 @@ namespace AA_Tech_Test
             // 
             // progressBar1
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.progressBar1.Location = new System.Drawing.Point(15, 201);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(195, 23);
-            this.progressBar1.Step = 25;
-            this.progressBar1.TabIndex = 11;
+            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.progressBar.Location = new System.Drawing.Point(15, 201);
+            this.progressBar.Name = "progressBar1";
+            this.progressBar.Size = new System.Drawing.Size(195, 23);
+            this.progressBar.Step = 25;
+            this.progressBar.TabIndex = 11;
             // 
             // errorDisplayPanel
             // 
-            this.errorDisplayPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.userOutputDisplayPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.errorDisplayPanel.AutoScroll = true;
-            this.errorDisplayPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.errorDisplayPanel.CausesValidation = false;
-            this.errorDisplayPanel.Controls.Add(this.userMessageBox);
-            this.errorDisplayPanel.Location = new System.Drawing.Point(12, 67);
-            this.errorDisplayPanel.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
-            this.errorDisplayPanel.MinimumSize = new System.Drawing.Size(80, 16);
-            this.errorDisplayPanel.Name = "errorDisplayPanel";
-            this.errorDisplayPanel.Size = new System.Drawing.Size(360, 69);
-            this.errorDisplayPanel.TabIndex = 12;
+            this.userOutputDisplayPanel.AutoScroll = true;
+            this.userOutputDisplayPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.userOutputDisplayPanel.CausesValidation = false;
+            this.userOutputDisplayPanel.Controls.Add(this.UserMessageBox);
+            this.userOutputDisplayPanel.Location = new System.Drawing.Point(12, 67);
+            this.userOutputDisplayPanel.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.userOutputDisplayPanel.MinimumSize = new System.Drawing.Size(80, 16);
+            this.userOutputDisplayPanel.Name = "errorDisplayPanel";
+            this.userOutputDisplayPanel.Size = new System.Drawing.Size(360, 69);
+            this.userOutputDisplayPanel.TabIndex = 12;
             // 
             // userMessageBox
             // 
-            this.userMessageBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.userMessageBox.CausesValidation = false;
-            this.userMessageBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.userMessageBox.ForeColor = System.Drawing.Color.Black;
-            this.userMessageBox.Location = new System.Drawing.Point(0, 0);
-            this.userMessageBox.MinimumSize = new System.Drawing.Size(70, 18);
-            this.userMessageBox.Multiline = true;
-            this.userMessageBox.Name = "userMessageBox";
-            this.userMessageBox.ReadOnly = true;
-            this.userMessageBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.userMessageBox.ShortcutsEnabled = false;
-            this.userMessageBox.Size = new System.Drawing.Size(360, 69);
-            this.userMessageBox.TabIndex = 13;
-            this.userMessageBox.WordWrap = false;
-            this.userMessageBox.TextChanged += new System.EventHandler(this.userMessageBox_TextChanged);
+            this.UserMessageBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.UserMessageBox.CausesValidation = false;
+            this.UserMessageBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.UserMessageBox.ForeColor = System.Drawing.Color.Black;
+            this.UserMessageBox.Location = new System.Drawing.Point(0, 0);
+            this.UserMessageBox.MinimumSize = new System.Drawing.Size(70, 18);
+            this.UserMessageBox.Multiline = true;
+            this.UserMessageBox.Name = "userMessageBox";
+            this.UserMessageBox.ReadOnly = true;
+            this.UserMessageBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.UserMessageBox.ShortcutsEnabled = false;
+            this.UserMessageBox.Size = new System.Drawing.Size(360, 69);
+            this.UserMessageBox.TabIndex = 13;
+            this.UserMessageBox.WordWrap = false;
+            this.UserMessageBox.TextChanged += new System.EventHandler(this.userMessageBox_TextChanged);
             // 
             // autoScrollCheckBox
             // 
@@ -196,10 +196,10 @@ namespace AA_Tech_Test
             this.ClientSize = new System.Drawing.Size(384, 237);
             this.Controls.Add(this.autoScrollCheckBox);
             this.Controls.Add(this.fileInputLabel);
-            this.Controls.Add(this.errorDisplayPanel);
-            this.Controls.Add(this.progressBar1);
+            this.Controls.Add(this.userOutputDisplayPanel);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.browseButton);
-            this.Controls.Add(this.cancelButton);
+            this.Controls.Add(this.CancelButton_);
             this.Controls.Add(this.instructionsLabel);
             this.Controls.Add(this.fileSubmitButton);
             this.Controls.Add(this.filePathTextBox);
@@ -209,8 +209,8 @@ namespace AA_Tech_Test
             this.Name = "Start";
             this.Text = "File Input";
             this.Load += new System.EventHandler(this.Start_Load);
-            this.errorDisplayPanel.ResumeLayout(false);
-            this.errorDisplayPanel.PerformLayout();
+            this.userOutputDisplayPanel.ResumeLayout(false);
+            this.userOutputDisplayPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -220,13 +220,13 @@ namespace AA_Tech_Test
         private TextBox filePathTextBox;
         private Button fileSubmitButton;
         private Label instructionsLabel;
-        public Button cancelButton;
-        private OpenFileDialog openFileDialog1;
+        public Button CancelButton_;
+        private OpenFileDialog openFileDialog;
         private Button browseButton;
-        private ProgressBar progressBar1;
-        private Panel errorDisplayPanel;
+        private ProgressBar progressBar;
+        private Panel userOutputDisplayPanel;
         private Label fileInputLabel;
-        public TextBox userMessageBox;
+        public TextBox UserMessageBox;
         private CheckBox autoScrollCheckBox;
     }
 }

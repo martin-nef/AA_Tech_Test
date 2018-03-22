@@ -65,7 +65,6 @@ namespace AA_Tech_Test
             this.filePathTextBox.Size = new System.Drawing.Size(331, 21);
             this.filePathTextBox.TabIndex = 1;
             this.filePathTextBox.Text = "C:\\Users\\Martin\\Desktop\\";
-            this.filePathTextBox.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // fileSubmitButton
             // 
@@ -163,7 +162,7 @@ namespace AA_Tech_Test
             this.userMessageBox.Size = new System.Drawing.Size(360, 69);
             this.userMessageBox.TabIndex = 13;
             this.userMessageBox.WordWrap = false;
-            this.userMessageBox.TextChanged += new System.EventHandler(this.errorLabel_TextChanged);
+            this.userMessageBox.TextChanged += new System.EventHandler(this.userMessageBox_TextChanged);
             // 
             // autoScrollCheckBox
             // 

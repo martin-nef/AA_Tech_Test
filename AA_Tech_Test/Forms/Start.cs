@@ -35,12 +35,7 @@ namespace AA_Tech_Test
 #endif
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private async void fileSubmitButton_Click(object sender, EventArgs e)
+        private void fileSubmitButton_Click(object sender, EventArgs e)
         // TODO: make a public event handler for messages meant for the user,
         //       and replace any references to the user message box (errorLabel)
         //       by firing off an event instead.
@@ -126,7 +121,7 @@ namespace AA_Tech_Test
                 {
                     if (attempt == 1)
                     {
-                        errorCode = ExcelTools.AppendToExcelFile(await reference, filePath);
+                        errorCode = ExcelTools.AppendToExcelFile(reference.GetAwaiter().GetResult(), filePath);
                         break; // no need to try again for attempt no. 2
                     }
                     else
@@ -171,19 +166,9 @@ namespace AA_Tech_Test
             new ResultDisplay(filePath, this).Show();
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void cancelButton_Click(object sender, EventArgs e)
         {
             Environment.Exit(0);
-        }
-
-        private void fileExtensionLabel_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
@@ -196,12 +181,7 @@ namespace AA_Tech_Test
             openFileDialog1.ShowDialog();
         }
 
-        private void errorLabel_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void errorLabel_TextChanged(object sender, EventArgs e)
+        private void userMessageBox_TextChanged(object sender, EventArgs e)
         {
             if (sender.GetType() != typeof(TextBox))
             {

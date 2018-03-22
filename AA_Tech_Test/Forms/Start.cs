@@ -30,7 +30,9 @@ namespace AA_Tech_Test
 
         private void Start_Load(object sender, EventArgs e)
         {
-
+#if DEBUG
+            DebugTools.Form.Show();
+#endif
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -82,38 +84,6 @@ namespace AA_Tech_Test
             /// Submit the form with data read, saving the reference
             var reference = WebFormTools.PostFormDataAsync(formData);
 
-            int errorCode = 0;
-
-            string mockReference = "MockReference - 12345678";
-            foreach (int attempt in new[] { 1, 2 })
-            {
-                try
-                {
-                    if (attempt == 1)
-                    {
-                        errorCode = ExcelTools.AppendToExcelFile(await reference, filePath);
-                        break; // no need to try again for attempt no. 2
-                    }
-                    else
-                    {
-                        errorCode = ExcelTools.AppendToExcelFile(mockReference, filePath);
-                        break;
-                    }
-                }
-                catch (InvalidReferenceException error)
-                {
-                    string tempMessage = $"{error.Message}\r\nFor demo purposes a mock reference was used: {mockReference}\r\n";
-                    userMessageBox.Text += tempMessage;
-                    DebugTools.Log(tempMessage);
-                }
-                catch (Exception error)
-                {
-                    string tempMessage = $"An error has occured while saving the submission reference. Additional Info:\r\n{error.Message}\r\n";
-                    userMessageBox.Text += tempMessage;
-                    DebugTools.Log(tempMessage);
-                }
-            }
-
             /// Wait for the form submission to finish, updating the loading bar in the meantime,
             /// but let the user know if something happens during submission / reference retreival.
             while (!reference.IsCompleted)
@@ -134,34 +104,10 @@ namespace AA_Tech_Test
                     goButton.Enabled = true;
                     return;
                 }
-                switch (reference.Status)
-                {
-                    case TaskStatus.Canceled:
-                        string tempMessage = "Form submission cancelled.\r\n" + userMessageBox.Text;
-                        userMessageBox.Text += tempMessage;
-                        DebugTools.Log(tempMessage);
-                        goButton.Enabled = true;
-                        return;
-                    case TaskStatus.Faulted:
-                        tempMessage = "Form submission failed due to an unknown error.\r\n";
-                        userMessageBox.Text += tempMessage;
-                        DebugTools.Log(tempMessage);
-                        goButton.Enabled = true;
-                        return;
-                    case TaskStatus.Created:
-                    case TaskStatus.RanToCompletion:
-                    case TaskStatus.Running:
-                    case TaskStatus.WaitingForActivation:
-                    case TaskStatus.WaitingForChildrenToComplete:
-                    case TaskStatus.WaitingToRun:
-                        break;
-                    default:
-                        throw new UnknownException("Form submission failed");
-                }
 
                 // Update the progress bar, reducing the step size every time so it never reaches 100.
                 progressBar1.PerformStep();
-                progressBar1.Step =(int)(0.5 + 3.00 * progressBar1.Step / 4.00);
+                progressBar1.Step = (int)(0.5 + 3.00 * progressBar1.Step / 4.00);
 
                 // Make sure that the form doesn't hang while waiting.
                 Refresh();
@@ -172,20 +118,51 @@ namespace AA_Tech_Test
             progressBar1.Value = 100;
             goButton.Enabled = true;
 
+            int errorCode = 0;
+            string mockReference = "MockReference - 12345678";
+            foreach (int attempt in new[] { 1, 2 })
+            {
+                try
+                {
+                    if (attempt == 1)
+                    {
+                        errorCode = ExcelTools.AppendToExcelFile(await reference, filePath);
+                        break; // no need to try again for attempt no. 2
+                    }
+                    else
+                    {
+                        errorCode = ExcelTools.AppendToExcelFile(mockReference, filePath);
+                        break;
+                    }
+                }
+                catch (InvalidReferenceException error)
+                {
+                    string errorMessage = $"{error.Message}\r\nFor demo purposes a mock reference was used: {mockReference}\r\n";
+                    userMessageBox.Text += errorMessage;
+                    DebugTools.Log(errorMessage);
+                }
+                catch (Exception error)
+                {
+                    string tempMessage = $"An error has occured while saving the submission reference. Additional Info:\r\n{error.Message}\r\n";
+                    userMessageBox.Text += tempMessage;
+                    DebugTools.Log(tempMessage);
+                }
+            }
+
             switch (errorCode)
             {
                 case 0:
                     break;
                 case 1:
-                    string tempMessage = "File specified was empty.\r\n";
-                    userMessageBox.Text += tempMessage;
-                    DebugTools.Log(tempMessage);
+                    string errorMessage = "File specified was empty.\r\n";
+                    userMessageBox.Text += errorMessage;
+                    DebugTools.Log(errorMessage);
                     goButton.Enabled = true;
                     return;
                 case 2:
-                    tempMessage = "Failed to get write permissions to the file.\r\n";
-                    userMessageBox.Text += tempMessage;
-                    DebugTools.Log(tempMessage);
+                    errorMessage = "Failed to get write permissions to the file.\r\n";
+                    userMessageBox.Text += errorMessage;
+                    DebugTools.Log(errorMessage);
                     goButton.Enabled = true;
                     return;
             }

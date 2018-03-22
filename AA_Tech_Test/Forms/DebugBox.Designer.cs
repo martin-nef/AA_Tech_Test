@@ -28,31 +28,31 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.debugOutput = new System.Windows.Forms.RichTextBox();
+            this.DebugOutputRichTextBox = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // debugOutput
             // 
-            this.debugOutput.CausesValidation = false;
-            this.debugOutput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.debugOutput.Location = new System.Drawing.Point(12, 12);
-            this.debugOutput.Name = "debugOutput";
-            this.debugOutput.ReadOnly = true;
-            this.debugOutput.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
-            this.debugOutput.Size = new System.Drawing.Size(260, 237);
-            this.debugOutput.TabIndex = 0;
-            this.debugOutput.Text = "";
-            this.debugOutput.TextChanged += new System.EventHandler(this.debugOutput_TextChanged);
-            this.debugOutput.Leave += new System.EventHandler(this.debugOutput_Leave);
-            this.debugOutput.MouseLeave += new System.EventHandler(this.debugOutput_Leave);
+            this.DebugOutputRichTextBox.CausesValidation = false;
+            this.DebugOutputRichTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DebugOutputRichTextBox.Location = new System.Drawing.Point(12, 12);
+            this.DebugOutputRichTextBox.Name = "debugOutput";
+            this.DebugOutputRichTextBox.ReadOnly = true;
+            this.DebugOutputRichTextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            this.DebugOutputRichTextBox.Size = new System.Drawing.Size(260, 237);
+            this.DebugOutputRichTextBox.TabIndex = 0;
+            this.DebugOutputRichTextBox.Text = "";
+            this.DebugOutputRichTextBox.TextChanged += new System.EventHandler(this.debugOutput_TextChanged);
+            this.DebugOutputRichTextBox.Leave += new System.EventHandler(this.debugOutput_Leave);
+            this.DebugOutputRichTextBox.MouseLeave += new System.EventHandler(this.debugOutput_Leave);
             // 
             // panel1
             // 
             this.panel1.AutoSize = true;
             this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel1.Controls.Add(this.debugOutput);
+            this.panel1.Controls.Add(this.DebugOutputRichTextBox);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
@@ -78,7 +78,7 @@
 
         #endregion
 
-        public System.Windows.Forms.RichTextBox debugOutput;
+        public System.Windows.Forms.RichTextBox DebugOutputRichTextBox;
         private System.Windows.Forms.Panel panel1;
     }
 }

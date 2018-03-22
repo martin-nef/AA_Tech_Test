@@ -23,9 +23,9 @@ namespace AA_Tech_Test
 
         private void debugOutput_TextChanged(object sender, EventArgs e)
         {
-            if (debugOutput.Lines.Count() >= maxLines)
+            if (DebugOutputRichTextBox.Lines.Count() >= maxLines)
             {
-                debugOutput.Lines = debugOutput.Lines.Skip(1).ToArray();
+                DebugOutputRichTextBox.Lines = DebugOutputRichTextBox.Lines.Skip(1).ToArray();
             }
         }
 
